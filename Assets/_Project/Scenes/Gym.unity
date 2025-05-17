@@ -1960,38 +1960,14 @@ MonoBehaviour:
   gridPosition: {x: 0, y: 0}
   targetPosition: {x: 0, y: 0}
   path: []
-  actionWalk:
-    duration: 0.5
-    tickCost: 1
-    mode: 2
-  actionHeal:
-    duration: 0.5
-    tickCost: 1
-    mode: 3
-  actionShield:
-    duration: 0.5
-    tickCost: 1
-    mode: 4
-  actionArrow:
-    duration: 0.5
-    tickCost: 1
-    mode: 5
-  actionSpell:
-    duration: 0.5
-    tickCost: 1
-    mode: 6
-  actionAxe:
-    duration: 0.5
-    tickCost: 1
-    mode: 7
-  actionSword:
-    duration: 0.5
-    tickCost: 1
-    mode: 8
-  actionHammer:
-    duration: 0.5
-    tickCost: 1
-    mode: 9
+  actionWalk: {fileID: 0}
+  actionHeal: {fileID: 0}
+  actionShield: {fileID: 0}
+  actionArrow: {fileID: 0}
+  actionSpell: {fileID: 0}
+  actionAxe: {fileID: 11400000, guid: 1c9bfc85f621b784c83afc411e59e36f, type: 2}
+  actionSword: {fileID: 11400000, guid: ec2765771fc518145a68e568772727e9, type: 2}
+  actionHammer: {fileID: 11400000, guid: f65de7c83d7fbff42b5e26c1844168ac, type: 2}
   pathPrefab: {fileID: 2746668053616216695, guid: c5bfcaff30cd0674b8b030d4d452c353, type: 3}
   coordTMP: {fileID: 1648709668}
   mouseRaycastLayer:

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bd8c4e821444a4489cc2c091426dca5, type: 3}
+  m_Name: Hammer
+  m_EditorClassIdentifier: 
+  duration: 0.5
+  tickCost: 1
+  directions:
+    east:
+      area:
+        cells: 00000000000000000000000000000000000000000000000000
+    southEast:
+      area:
+        cells: 00000000000000000000000000000000000000000000000000
+    south:
+      area:
+        cells: 00000000000000000000000000000000000000000000000000
+    southWest:
+      area:
+        cells: 00000000000000000000000000000000000000000000000000
+    west:
+      area:
+        cells: 00000000000000000000000000000000000000000000000000
+    northWest:
+      area:
+        cells: 00000000000000000000000000000000000000000000000000
+    north:
+      area:
+        cells: 00000000000000000000000000000000000000000000000000
+    northEast:
+      area:
+        cells: 00000000000000000000000000000000000000000000000000

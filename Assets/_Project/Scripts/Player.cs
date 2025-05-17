@@ -5,30 +5,14 @@ public class Player : PathFindingUnit
 {
 	public static Player Instance { get; private set; }
 
-	[Header("Walk")]
 	[SerializeField] Action actionWalk;
-
-	[Header("Heal")]
 	[SerializeField] Action actionHeal;
-
-	[Header("Shield")]
 	[SerializeField] Action actionShield;
-
-	[Header("Arrow")]
 	[SerializeField] Action actionArrow;
-
-	[Header("Spell")]
 	[SerializeField] Action actionSpell;
-
-	[Header("Axe")]
-	[SerializeField] Action actionAxe;
-
-	[Header("Sword")]
-	[SerializeField] Action actionSword;
-
-	[Header("Hammer")]
-	[SerializeField] Action actionHammer;
-
+	[SerializeField] Axe actionAxe;
+	[SerializeField] Sword actionSword;
+	[SerializeField] Hammer actionHammer;
 
 	[Header("Technical")]
 	[SerializeField] GameObject pathPrefab;
@@ -48,6 +32,10 @@ public class Player : PathFindingUnit
 	float movementDuration = 0.2f;
 	float movementCooldown = 0.1f;
 
+	Vector2 _mousePos = Vector2.zero;
+	Vector2 _playerPos = Vector2.zero;
+	Vector2 _pointedDirection = Vector2.zero;
+	Vector2 _clampedDirection = Vector2.zero;
 	Vector2Int roundedMousePos = Vector2Int.zero;
 
 	private void Awake()
@@ -64,10 +52,12 @@ public class Player : PathFindingUnit
 		gridPosition = new(31, 31);
 		transform.position = new Vector3(gridPosition.x, 0, gridPosition.y);
 		_currentPath = null;
+		InitializePositions();
 	}
 
 	void Update()
 	{
+
 		if (Input.GetKey(KeyCode.D) && gridPosition.x < GameGrid.GRID_SIZE - 1) // Left
 			gridPosition.x++;
 		if (Input.GetKey(KeyCode.A) && gridPosition.x > 0) // Right
@@ -83,18 +73,26 @@ public class Player : PathFindingUnit
 		//	Instantiate(pathPrefab, new Vector3(x, 0, y), Quaternion.identity, GameGrid.instance.transform);
 		//}
 
-		
+		// Get player position on the grid
+		_playerPos = new(transform.position.x, transform.position.z);
 
+		// Get mouse position on the grid
 		if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hitInfo, 1000f, mouseRaycastLayer))
 		{
-			roundedMousePos.x = Mathf.FloorToInt(hitInfo.point.x + 0.5f);
-			roundedMousePos.y = Mathf.FloorToInt(hitInfo.point.z + 0.5f);
+			_mousePos = new(hitInfo.point.x, hitInfo.point.z);
+
+			roundedMousePos.x = Mathf.FloorToInt(_mousePos.x + 0.5f);
+			roundedMousePos.y = Mathf.FloorToInt(_mousePos.y + 0.5f);
 
 			coordTMP.text =
-				$"x : {hitInfo.point.x}\ny : {hitInfo.point.z}\n" +
+				$"x : {_mousePos.x}\ny : {_mousePos.y}\n" +
 				$"x : {roundedMousePos.x}\ny : {roundedMousePos.y}";
-			
 		}
+
+		// Get direction between player position and mouse position
+		//float angle = Vector2.SignedAngle(_playerPos, _mousePos);
+		_pointedDirection = _mousePos - _playerPos;
+		_clampedDirection = ClampDirection(_pointedDirection);
 
 		targetPosition = roundedMousePos;
 		if (GameGrid.instance.gridCell[targetPosition.x, targetPosition.y].walkable)
@@ -129,6 +127,13 @@ public class Player : PathFindingUnit
 		FollowPath();
 	}
 
+	void InitializePositions()
+	{
+		actionAxe.directions.InitializePositions();
+		//actionSword;
+		//actionHammer;
+	}
+
 	protected void OnPathFound(Vector2Int[] newPath, bool success)
 	{
 		path = success ? newPath : null;
@@ -158,7 +163,7 @@ public class Player : PathFindingUnit
 			{
 				gridPosition = _currentPath[_currentPathIndex];
 				transform.position = new Vector3(gridPosition.x, 0, gridPosition.y);
-					mesh.position = new Vector3(gridPosition.x, 0.2f, gridPosition.y);
+				mesh.position = new Vector3(gridPosition.x, 0.2f, gridPosition.y);
 
 				_currentPathIndex++;
 				_currentMovementElapsedTime = 0f;
@@ -170,16 +175,68 @@ public class Player : PathFindingUnit
 		}
 	}
 
-	[System.Serializable]
-	public class Action
+	CardinalDirection GetCardinalDirection(Vector2 direction)
 	{
-		[Header("Action Properties")]
-		[SerializeField] float duration = 0.5f;
-		[SerializeField] int tickCost = 1;
-		[SerializeField] ActionMode mode;
+		// Exclude vector zero
+		if (direction.sqrMagnitude <= 0.01f)
+			return CardinalDirection.None;
 
-		//[Header("Technical")]
-		//int t;
+		// Get angle in radians
+		float angle = Mathf.Atan2(direction.y, direction.x);
+
+		// Convert angle from radians to degrees, normalize to 0-360
+		float angleDeg = Mathf.Rad2Deg * angle;
+		if (angleDeg < 0)
+			angleDeg += 360f;
+
+		// Snap to nearest 45° (360° / 8 directions)
+		int index = Mathf.RoundToInt(angleDeg / 45f) % 8;
+
+		return index switch
+		{
+			0 => CardinalDirection.East,		// 0 -> 0°    East
+			1 => CardinalDirection.NorthEast,	// 1 -> 45°   NorthEast
+			2 => CardinalDirection.North,		// 2 -> 90°   North
+			3 => CardinalDirection.NorthWest,	// 3 -> 135°  NorthWest
+			4 => CardinalDirection.West,		// 4 -> 180°  West
+			5 => CardinalDirection.SouthWest,	// 5 -> 225°  SouthWest
+			6 => CardinalDirection.South,		// 6 -> 270°  South
+			7 => CardinalDirection.SouthEast,	// 7 -> 315°  SouthEast
+			_ => CardinalDirection.None,
+		};
+	}
+
+	Vector2 ClampDirection(Vector2 direction)
+	{
+		// Exclude vector zero
+		if (direction.sqrMagnitude <= 0.01f)
+			return Vector2.zero;
+
+		// Get angle in radians
+		float angle = Mathf.Atan2(direction.y, direction.x);
+
+		// Convert angle from radians to degrees, normalize to 0-360
+		float angleDeg = Mathf.Rad2Deg * angle;
+		if (angleDeg < 0)
+			angleDeg += 360f;
+
+		// Snap to nearest 45° (360° / 8 directions)
+		int index = Mathf.RoundToInt(angleDeg / 45f) % 8;
+
+		// Look-up table for the 8 directions
+		Vector2[] directions8 = new Vector2[]
+		{
+			Vector2.right,                          // 0 -> 0°    East
+			new Vector2(1, 1).normalized,           // 1 -> 45°   NorthEast
+			Vector2.up,                             // 2 -> 90°   North
+			new Vector2(-1, 1).normalized,          // 3 -> 135°  NorthWest
+			Vector2.left,                           // 4 -> 180°  West
+			new Vector2(-1, -1).normalized,         // 5 -> 225°  SouthWest
+			Vector2.down,                           // 6 -> 270°  South
+			new Vector2(1, -1).normalized           // 7 -> 315°  SouthEast
+		};
+
+		return directions8[index];
 	}
 
 	[System.Serializable]
@@ -195,5 +252,34 @@ public class Player : PathFindingUnit
 		Axe,
 		Sword,
 		Hammer,
+	}
+
+	private void OnDrawGizmos()
+	{
+		Gizmos.color = Color.red;
+		Gizmos.DrawLine(new(_playerPos.x, 0.2f, _playerPos.y), new Vector3(_playerPos.x, 0.2f, _playerPos.y) + new Vector3(_pointedDirection.x, 0f, _pointedDirection.y));
+		Gizmos.color = Color.blue;
+		Gizmos.DrawLine(new(_playerPos.x, 0.2f, _playerPos.y), new Vector3(_playerPos.x, 0.2f, _playerPos.y) + new Vector3(_clampedDirection.x, 0f, _clampedDirection.y));
+
+
+		if (Application.isPlaying)
+		{
+			Gizmos.color = Color.green;
+			AttackArea attackArea = actionAxe.directions.GetAreaFromDirection(GetCardinalDirection(_clampedDirection));
+
+			if (attackArea == null)
+				return;
+
+			Vector2Int[] pos = attackArea.GetPositions();
+
+			if (pos == null)
+				return;
+
+			for (int i = 0; i < pos.Length; i++)
+			{
+				Vector3 p = new(_playerPos.x + pos[i].x - 2, 0.2f, _playerPos.y + pos[i].y - 2);
+				Gizmos.DrawSphere(p, 0.1f);
+			}
+		}
 	}
 }
