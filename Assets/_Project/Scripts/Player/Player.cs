@@ -1,18 +1,14 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.InputSystem;
 
 public class Player : PathFindingUnit
 {
 	public static Player Instance { get; private set; }
 
-	[SerializeField] Action actionWalk;
-	[SerializeField] Action actionHeal;
-	[SerializeField] Action actionShield;
-	[SerializeField] Action actionArrow;
-	[SerializeField] Action actionSpell;
-	[SerializeField] Axe actionAxe;
-	[SerializeField] Sword actionSword;
-	[SerializeField] Hammer actionHammer;
+	[Header("Actions")]
+	[SerializeField] Action[] actions;
+	[SerializeField] InputActionReference validateAction;
 
 	[Header("Technical")]
 	[SerializeField] GameObject pathPrefab;
@@ -20,8 +16,14 @@ public class Player : PathFindingUnit
 	[SerializeField] LayerMask mouseRaycastLayer = (1 << 3);
 	[SerializeField] Transform mesh;
 
+
+	// Actions
 	Action _selectedAction;
 	Action _performingAction;
+	bool _isPerformingAction = false;
+	float _actionElapsedTime = 0f;
+	Vector2 _actionDirection = Vector2.zero;
+	CardinalDirection _actionCardinal = CardinalDirection.None;
 
 
 	LineRenderer _pathLineRenderer;
@@ -58,14 +60,14 @@ public class Player : PathFindingUnit
 	void Update()
 	{
 
-		if (Input.GetKey(KeyCode.D) && gridPosition.x < GameGrid.GRID_SIZE - 1) // Left
-			gridPosition.x++;
-		if (Input.GetKey(KeyCode.A) && gridPosition.x > 0) // Right
-			gridPosition.x--;
-		if (Input.GetKey(KeyCode.W) && gridPosition.y < GameGrid.GRID_SIZE - 1) // Up
-			gridPosition.y++;
-		if (Input.GetKey(KeyCode.S) && gridPosition.y > 0) // Down
-			gridPosition.y--;
+		//if (Input.GetKey(KeyCode.D) && gridPosition.x < GameGrid.GRID_SIZE - 1) // Left
+		//	gridPosition.x++;
+		//if (Input.GetKey(KeyCode.A) && gridPosition.x > 0) // Right
+		//	gridPosition.x--;
+		//if (Input.GetKey(KeyCode.W) && gridPosition.y < GameGrid.GRID_SIZE - 1) // Up
+		//	gridPosition.y++;
+		//if (Input.GetKey(KeyCode.S) && gridPosition.y > 0) // Down
+		//	gridPosition.y--;
 
 		//if (!GameGrid.instance.gridCell[x, y].visited)
 		//{
@@ -118,22 +120,35 @@ public class Player : PathFindingUnit
 			_pathLineRenderer.positionCount = 0;
 		}
 
-		if (Input.GetKeyDown(KeyCode.Mouse0))
-		{
-			_currentPathIndex = 0;
-			_currentPath = path;
-		}
+		//if (Input.GetKeyDown(KeyCode.Mouse0))
+		//{
+		//	_currentPathIndex = 0;
+		//	_currentPath = path;
+		//}
+
+		HandleActionInputs();
+
+		HandleAction();
 
 		FollowPath();
+
+		//Debug.Log("Selected Action : " + _selectedAction);
+		//Debug.Log("Performing Action : " + _performingAction);
 	}
 
+	// Initialization
 	void InitializePositions()
 	{
-		actionAxe.directions.InitializePositions();
-		//actionSword;
-		//actionHammer;
+		for (int i = 0; i < actions.Length; i++)
+		{
+			if (actions[i] is MeleeAttack meleeAttack)
+				meleeAttack.directions.InitializePositions();
+		}
 	}
 
+	#region PATHFINDING
+
+	// Pathfinding
 	protected void OnPathFound(Vector2Int[] newPath, bool success)
 	{
 		path = success ? newPath : null;
@@ -175,6 +190,10 @@ public class Player : PathFindingUnit
 		}
 	}
 
+	#endregion
+
+	#region ACTION
+	// Actions
 	CardinalDirection GetCardinalDirection(Vector2 direction)
 	{
 		// Exclude vector zero
@@ -239,6 +258,69 @@ public class Player : PathFindingUnit
 		return directions8[index];
 	}
 
+	void HandleActionInputs()
+	{
+		// Exit if an action is already being performed
+		if (_isPerformingAction)
+			return;
+
+		// Check every action to see if its corresponding input is pressed
+		for (int i = 0; i < actions.Length; i++)
+		{
+			if (actions[i].action.action.triggered)
+			{
+				if (_selectedAction == actions[i])
+					_selectedAction = null;
+				else
+					_selectedAction = actions[i];
+			}
+		}
+
+		// If an action has been selected, and the validate input (LMB) is pressed, perform the action
+		if (_selectedAction != null)
+		{
+			if (validateAction.action.WasPressedThisFrame())
+			{
+				_isPerformingAction = true;
+				_performingAction = _selectedAction;
+				_selectedAction = null;
+				_actionDirection = _clampedDirection;
+				_actionCardinal = GetCardinalDirection(_actionDirection);
+			}
+		}
+	}
+
+	void HandleAction()
+	{
+		if (_isPerformingAction)
+		{
+			if (_actionElapsedTime > _performingAction.duration)
+			{
+				_isPerformingAction = false;
+				_performingAction = null;
+			}
+			else
+			{
+				// Action here
+
+				// If attack is type of melee attack, apply its corresponding damage inside the corresponding area
+				if (_performingAction is MeleeAttack meleeAttack)
+				{
+					
+				}
+
+
+				_actionElapsedTime += Time.deltaTime;
+			}
+		}
+		else
+		{
+			_actionElapsedTime = 0f;
+		}
+	}
+
+	#endregion
+
 	[System.Serializable]
 	public enum ActionMode
 	{
@@ -261,11 +343,10 @@ public class Player : PathFindingUnit
 		Gizmos.color = Color.blue;
 		Gizmos.DrawLine(new(_playerPos.x, 0.2f, _playerPos.y), new Vector3(_playerPos.x, 0.2f, _playerPos.y) + new Vector3(_clampedDirection.x, 0f, _clampedDirection.y));
 
-
-		if (Application.isPlaying)
+		if (Application.isPlaying && _performingAction != null && _performingAction is MeleeAttack meleeAttack)
 		{
 			Gizmos.color = Color.green;
-			AttackArea attackArea = actionAxe.directions.GetAreaFromDirection(GetCardinalDirection(_clampedDirection));
+			AttackArea attackArea = meleeAttack.directions.GetAreaFromDirection(_actionCardinal);
 
 			if (attackArea == null)
 				return;

@@ -1921,6 +1921,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1275988642}
   - component: {fileID: 1275988643}
+  - component: {fileID: 1275988645}
+  - component: {fileID: 1275988644}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1968,12 +1970,65 @@ MonoBehaviour:
   actionAxe: {fileID: 11400000, guid: 1c9bfc85f621b784c83afc411e59e36f, type: 2}
   actionSword: {fileID: 11400000, guid: ec2765771fc518145a68e568772727e9, type: 2}
   actionHammer: {fileID: 11400000, guid: f65de7c83d7fbff42b5e26c1844168ac, type: 2}
+  actions:
+  - {fileID: 11400000, guid: ec2765771fc518145a68e568772727e9, type: 2}
+  - {fileID: 11400000, guid: f65de7c83d7fbff42b5e26c1844168ac, type: 2}
+  - {fileID: 11400000, guid: 1c9bfc85f621b784c83afc411e59e36f, type: 2}
+  - {fileID: 11400000, guid: 151e88b5935eb9e4c9f109ac565be9f5, type: 2}
+  - {fileID: 11400000, guid: 52286ae947ec1aa46995286f082854cd, type: 2}
+  - {fileID: 11400000, guid: 7857e10bdb9e7cf46b4b75c15bd869cf, type: 2}
+  - {fileID: 11400000, guid: a676326465394fc4a93f8f573a10b32e, type: 2}
+  - {fileID: 11400000, guid: c30766d8b9ea3074983032f1479f3b33, type: 2}
+  validateAction: {fileID: 3326889935343493063, guid: a1325c6c4c850174cbb4f68901b83e39, type: 3}
   pathPrefab: {fileID: 2746668053616216695, guid: c5bfcaff30cd0674b8b030d4d452c353, type: 3}
   coordTMP: {fileID: 1648709668}
   mouseRaycastLayer:
     serializedVersion: 2
     m_Bits: 8
   mesh: {fileID: 1718886051}
+--- !u!114 &1275988644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1275988641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Actions: {fileID: -944628639613478452, guid: a1325c6c4c850174cbb4f68901b83e39, type: 3}
+  m_NotificationBehavior: 0
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents: []
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Gameplay
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
+--- !u!114 &1275988645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1275988641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5119006a353315f49a1d3fb5cfaabd24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInputActions: {fileID: -944628639613478452, guid: a1325c6c4c850174cbb4f68901b83e39, type: 3}
 --- !u!1 &1524952050
 GameObject:
   m_ObjectHideFlags: 0
