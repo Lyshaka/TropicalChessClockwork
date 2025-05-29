@@ -1,6 +1,8 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
+using System.Collections;
 
 public class Player : PathFindingUnit
 {
@@ -12,19 +14,23 @@ public class Player : PathFindingUnit
 
 	[Header("Technical")]
 	[SerializeField] GameObject pathPrefab;
+	[SerializeField] GameObject cellFeedbackVisualizerPrefab;
 	[SerializeField] TextMeshProUGUI coordTMP;
 	[SerializeField] LayerMask mouseRaycastLayer = (1 << 3);
 	[SerializeField] Transform mesh;
-
 
 	// Actions
 	Action _selectedAction;
 	Action _performingAction;
 	bool _isPerformingAction = false;
+	bool _actionStart;
 	float _actionElapsedTime = 0f;
 	Vector2 _actionDirection = Vector2.zero;
 	CardinalDirection _actionCardinal = CardinalDirection.None;
 
+	// Cell Feedback Visualizer
+	List<GameObject> _cellFeedbackVisualizersActive = new();
+	List<GameObject> _cellFeedbackVisualizersInactive = new();
 
 	LineRenderer _pathLineRenderer;
 
@@ -192,7 +198,7 @@ public class Player : PathFindingUnit
 
 	#endregion
 
-	#region ACTION
+	#region ACTIONS
 	// Actions
 	CardinalDirection GetCardinalDirection(Vector2 direction)
 	{
@@ -276,9 +282,18 @@ public class Player : PathFindingUnit
 			}
 		}
 
-		// If an action has been selected, and the validate input (LMB) is pressed, perform the action
+		// If an action has been selected
 		if (_selectedAction != null)
 		{
+			// Deactivate all the cell feedback visualizers
+			foreach (GameObject obj in _cellFeedbackVisualizersActive)
+			{
+				_cellFeedbackVisualizersInactive.Add(obj);
+				obj.SetActive(false);
+			}
+			_cellFeedbackVisualizersActive.Clear();
+
+			// If an action has been selected, and the validate input(LMB) is pressed, perform the action
 			if (validateAction.action.WasPressedThisFrame())
 			{
 				_isPerformingAction = true;
@@ -286,6 +301,30 @@ public class Player : PathFindingUnit
 				_selectedAction = null;
 				_actionDirection = _clampedDirection;
 				_actionCardinal = GetCardinalDirection(_actionDirection);
+			}
+			else // Otherwise just show the cell feedback visualizer, if applicable
+			{
+				if (_selectedAction is MeleeAttack attack)
+				{
+					Vector2Int[] gridPositions = attack.directions.GetAreaFromDirection(GetCardinalDirection(_clampedDirection)).GetPositions();
+
+					for (int i = 0; i < gridPositions.Length; i++)
+					{
+						// Instantiate the visualizers if none are available
+						if (_cellFeedbackVisualizersInactive.Count <= 0)
+						{
+							GameObject obj = Instantiate(cellFeedbackVisualizerPrefab, transform);
+							_cellFeedbackVisualizersInactive.Add(obj);
+						}
+
+						Vector3 pos = new Vector3(gridPositions[i].x - 2, 0f, gridPositions[i].y - 2) + transform.position;
+
+						_cellFeedbackVisualizersInactive[0].SetActive(true);
+						_cellFeedbackVisualizersInactive[0].transform.position = pos;
+						_cellFeedbackVisualizersActive.Add(_cellFeedbackVisualizersInactive[0]);
+						_cellFeedbackVisualizersInactive.RemoveAt(0);
+					}
+				}
 			}
 		}
 	}
@@ -296,18 +335,74 @@ public class Player : PathFindingUnit
 		{
 			if (_actionElapsedTime > _performingAction.duration)
 			{
+				//foreach (GameObject obj in _cellFeedbackVisualizersActive)
+				//{
+				//	_cellFeedbackVisualizersInactive.Add(obj);
+				//	obj.SetActive(false);
+				//}
+				//_cellFeedbackVisualizersActive.Clear();
+
 				_isPerformingAction = false;
 				_performingAction = null;
 			}
 			else
 			{
+				// Action Start (executed only once)
+				if (_actionStart)
+				{
+					//if (_performingAction is MeleeAttack attack)
+					//{
+					//	Vector2Int[] gridPositions = attack.directions.GetAreaFromDirection(_actionCardinal).GetPositions();
+
+					//	for (int i = 0; i < gridPositions.Length; i++)
+					//	{
+					//		// Instantiate the visualizers
+
+					//		if (_cellFeedbackVisualizersInactive.Count <= 0)
+					//		{
+					//			GameObject obj = Instantiate(cellFeedbackVisualizerPrefab, transform);
+					//			_cellFeedbackVisualizersInactive.Add(obj);
+					//		}
+
+					//		Vector3 pos = new Vector3(gridPositions[i].x - 2, 0f, gridPositions[i].y - 2) + transform.position;
+
+					//		_cellFeedbackVisualizersInactive[0].SetActive(true);
+					//		_cellFeedbackVisualizersInactive[0].transform.position = pos;
+					//		_cellFeedbackVisualizersActive.Add(_cellFeedbackVisualizersInactive[0]);
+					//		_cellFeedbackVisualizersInactive.RemoveAt(0);
+					//	}
+
+					//}
+
+
+					_actionStart = false;
+				}
+
+
+				// Visualisation
+
+
+
 				// Action here
 
-				// If attack is type of melee attack, apply its corresponding damage inside the corresponding area
+				// If action is type of melee attack, apply its corresponding damage inside the corresponding area
 				if (_performingAction is MeleeAttack meleeAttack)
 				{
-					
+					//Vector2Int[] gridPositions = meleeAttack.directions.GetAreaFromDirection(GetCardinalDirection(_clampedDirection)).GetPositions();
+
+					//for (int i = 0; i < _cellFeedbackVisualizersActive.Count; i++)
+					//{
+					//	Vector3 pos = new Vector3(gridPositions[i].x - 2, 0f, gridPositions[i].y - 2) + transform.position;
+					//	_cellFeedbackVisualizersActive[i].transform.position = pos;
+					//}
 				}
+
+				// 
+				if (_performingAction is Move move)
+				{
+
+				}
+
 
 
 				_actionElapsedTime += Time.deltaTime;
@@ -316,25 +411,11 @@ public class Player : PathFindingUnit
 		else
 		{
 			_actionElapsedTime = 0f;
+			_actionStart = true;
 		}
 	}
 
 	#endregion
-
-	[System.Serializable]
-	public enum ActionMode
-	{
-		None,
-		Performing,
-		Walk,
-		Heal,
-		Shield,
-		Arrow,
-		Spell,
-		Axe,
-		Sword,
-		Hammer,
-	}
 
 	private void OnDrawGizmos()
 	{

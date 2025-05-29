@@ -1962,14 +1962,6 @@ MonoBehaviour:
   gridPosition: {x: 0, y: 0}
   targetPosition: {x: 0, y: 0}
   path: []
-  actionWalk: {fileID: 0}
-  actionHeal: {fileID: 0}
-  actionShield: {fileID: 0}
-  actionArrow: {fileID: 0}
-  actionSpell: {fileID: 0}
-  actionAxe: {fileID: 11400000, guid: 1c9bfc85f621b784c83afc411e59e36f, type: 2}
-  actionSword: {fileID: 11400000, guid: ec2765771fc518145a68e568772727e9, type: 2}
-  actionHammer: {fileID: 11400000, guid: f65de7c83d7fbff42b5e26c1844168ac, type: 2}
   actions:
   - {fileID: 11400000, guid: ec2765771fc518145a68e568772727e9, type: 2}
   - {fileID: 11400000, guid: f65de7c83d7fbff42b5e26c1844168ac, type: 2}
@@ -1981,6 +1973,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c30766d8b9ea3074983032f1479f3b33, type: 2}
   validateAction: {fileID: 3326889935343493063, guid: a1325c6c4c850174cbb4f68901b83e39, type: 3}
   pathPrefab: {fileID: 2746668053616216695, guid: c5bfcaff30cd0674b8b030d4d452c353, type: 3}
+  cellFeedbackVisualizerPrefab: {fileID: 8736253093178923659, guid: d37ce9bb7151a7c4ca9b0bb92de71bf3, type: 3}
   coordTMP: {fileID: 1648709668}
   mouseRaycastLayer:
     serializedVersion: 2
